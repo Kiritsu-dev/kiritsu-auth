@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
-import lombok.ToString;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,7 +16,7 @@ import java.util.List;
 @NoArgsConstructor(force = true)
 @RequiredArgsConstructor
 @Table(name = "users")
-public class users implements UserDetails {
+public class user implements UserDetails {
     // private static final long serialVersionUID = 1L;
 
     @Id
