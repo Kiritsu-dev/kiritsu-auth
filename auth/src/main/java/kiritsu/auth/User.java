@@ -16,12 +16,12 @@ import java.util.List;
 @NoArgsConstructor(force = true)
 @RequiredArgsConstructor
 @Table(name = "users")
-public class user implements UserDetails {
+public class User implements UserDetails {
     // private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
-    private Long Id;
+    @GeneratedValue(strategy=GenerationType.IDENTITY)
+    private Long id;
 
     private String username;
     private String email;
