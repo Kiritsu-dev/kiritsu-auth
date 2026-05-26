@@ -14,7 +14,6 @@ import java.util.List;
 @Data
 @Entity
 @NoArgsConstructor(force = true)
-@RequiredArgsConstructor
 @Table(name = "users")
 public class User implements UserDetails {
     // private static final long serialVersionUID = 1L;
