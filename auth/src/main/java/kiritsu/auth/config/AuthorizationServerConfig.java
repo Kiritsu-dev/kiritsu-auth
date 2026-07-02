@@ -21,6 +21,7 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
 
 
 import java.security.KeyPair;
@@ -28,6 +29,7 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.util.List;
 import java.util.UUID;
 
 @Configuration(proxyBeanMethods = false)
@@ -35,12 +37,19 @@ public class AuthorizationServerConfig {
 
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
-    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) {
+    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
         http
                 .oauth2AuthorizationServer((authorizationServer) -> {
                     http.securityMatcher(authorizationServer.getEndpointsMatcher());
                     authorizationServer.oidc(Customizer.withDefaults());
                 })
+                .cors(cors -> cors.configurationSource(request -> {
+                    CorsConfiguration config = new CorsConfiguration();
+                    config.setAllowedOrigins(List.of("http://localhost:5173"));
+                    config.setAllowedMethods(List.of("POST", "OPTIONS"));
+                    config.setAllowedHeaders(List.of("*"));
+                    return config;
+                }))
                 .authorizeHttpRequests((authorize) -> authorize
                         .anyRequest().authenticated()
                 )
@@ -52,7 +61,8 @@ public class AuthorizationServerConfig {
     @Bean
     public RegisteredClientRepository registeredClientRepository(
             PasswordEncoder passwordEncoder) {
-        RegisteredClient registeredClient =
+
+        RegisteredClient dashboardClient =
                 RegisteredClient.withId(UUID.randomUUID().toString())
                         .clientId("kiritsu-dashboard-client")
                         .clientSecret(passwordEncoder.encode("secret"))
@@ -69,8 +79,24 @@ public class AuthorizationServerConfig {
                                 .requireProofKey(false)
                                 .build())
                         .build();
-        return new InMemoryRegisteredClientRepository(registeredClient);
+
+        RegisteredClient subsClient =
+                RegisteredClient.withId(UUID.randomUUID().toString())
+                        .clientId("kiritsu-subs-client")
+                        .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
+                        .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                        .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                        .redirectUri("http://localhost:5173/callback")
+                        .scope("subscriptions.read")
+                        .scope("subscriptions.write")
+                        .clientSettings(ClientSettings.builder()
+                                .requireProofKey(true)
+                                .build())
+                        .build();
+
+        return new InMemoryRegisteredClientRepository(dashboardClient, subsClient);
     }
+
 
     @Bean
     public JWKSource<SecurityContext> jwkSource() throws NoSuchAlgorithmException {
